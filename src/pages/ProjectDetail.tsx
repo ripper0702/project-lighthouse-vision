@@ -1,13 +1,17 @@
 
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import PageLayout from "../components/layout/PageLayout";
 import { Calendar, Clock } from "@phosphor-icons/react";
 import { projects } from "../data/projectData";
 import TabBar from "../components/ui-components/TabBar";
+import { Button } from "@/components/ui/button";
+import ProjectInitializationModal from "../components/project/ProjectInitializationModal";
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const projectId = parseInt(id || "0");
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const project = projects.find(p => p.id === projectId);
   
@@ -36,6 +40,15 @@ const ProjectDetail = () => {
               <span>{project.date}</span>
             </div>
           )}
+          
+          <div className="mt-4">
+            <Button 
+              onClick={() => setIsModalOpen(true)}
+              className="w-full bg-primary-500 hover:bg-primary-600"
+            >
+              Start Project Implementation
+            </Button>
+          </div>
         </div>
         
         {/* Project Details */}
@@ -44,6 +57,12 @@ const ProjectDetail = () => {
           <p className="text-gray-600">{project.details || "No additional details available for this project."}</p>
         </div>
       </PageLayout>
+      
+      <ProjectInitializationModal
+        projectName={project.name}
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+      />
       
       <TabBar />
     </div>
