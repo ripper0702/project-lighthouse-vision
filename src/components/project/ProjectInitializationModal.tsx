@@ -8,9 +8,38 @@ import {
   DialogClose
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle } from "@phosphor-icons/react";
+import { CheckCircle, PresentationChart, ChartLineUp, ChartBar } from "@phosphor-icons/react";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Progress } from "@/components/ui/progress";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell
+} from "recharts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { 
+  ChartContainer, 
+  ChartTooltip, 
+  ChartTooltipContent 
+} from "@/components/ui/chart";
+import { Label } from "@/components/ui/label";
 
 interface ProjectInitializationModalProps {
   projectName: string;
@@ -18,9 +47,42 @@ interface ProjectInitializationModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Mock data for charts
+const budgetData = [
+  { name: 'Planned', amount: 50000 },
+  { name: 'Actual', amount: 45000 },
+  { name: 'Remaining', amount: 5000 },
+];
+
+const timelineData = [
+  { name: 'Jan', planned: 10, actual: 8 },
+  { name: 'Feb', planned: 20, actual: 18 },
+  { name: 'Mar', planned: 30, actual: 25 },
+  { name: 'Apr', planned: 40, actual: 35 },
+  { name: 'May', planned: 50, actual: 45 },
+  { name: 'Jun', planned: 60, actual: 52 },
+];
+
+const impactData = [
+  { name: 'Direct Beneficiaries', value: 250 },
+  { name: 'Indirect Beneficiaries', value: 1000 },
+  { name: 'Community Partners', value: 15 },
+  { name: 'Volunteer Hours', value: 500 },
+];
+
+const COLORS = ['#9b87f5', '#F97316', '#0EA5E9', '#D946EF'];
+
+const riskData = [
+  { category: 'Financial', level: 70 },
+  { category: 'Operational', level: 45 },
+  { category: 'Technical', level: 30 },
+  { category: 'Schedule', level: 55 },
+];
+
 const ProjectInitializationModal = ({ projectName, isOpen, onOpenChange }: ProjectInitializationModalProps) => {
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [selectedChart, setSelectedChart] = useState<string>("budget");
   
   const steps = [
     {
@@ -145,17 +207,20 @@ const ProjectInitializationModal = ({ projectName, isOpen, onOpenChange }: Proje
         {
           title: "Final Report",
           description: "Results, lessons learned, challenges, and successes.",
-          input: "textarea"
+          input: "textarea",
+          hasVisualizations: true
         },
         {
           title: "Impact Assessment",
           description: "Long-term benefits and sustainability.",
-          input: "textarea"
+          input: "textarea",
+          hasVisualizations: true
         },
         {
           title: "Stakeholder Presentation",
           description: "Share results with funders, partners, community, etc.",
-          input: "textarea"
+          input: "textarea",
+          hasVisualizations: true
         }
       ]
     }
@@ -169,6 +234,86 @@ const ProjectInitializationModal = ({ projectName, isOpen, onOpenChange }: Proje
   
   const isStepComplete = (stepId: number) => {
     return completedSteps.includes(stepId);
+  };
+
+  const renderDataVisualization = () => {
+    switch (selectedChart) {
+      case "budget":
+        return (
+          <div className="mt-4">
+            <h4 className="text-md font-medium mb-2">Budget Allocation</h4>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={budgetData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="amount" fill="#9b87f5" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      case "timeline":
+        return (
+          <div className="mt-4">
+            <h4 className="text-md font-medium mb-2">Project Timeline Progress</h4>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={timelineData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="planned" stroke="#9b87f5" />
+                <Line type="monotone" dataKey="actual" stroke="#7E69AB" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      case "impact":
+        return (
+          <div className="mt-4">
+            <h4 className="text-md font-medium mb-2">Impact Distribution</h4>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={impactData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                >
+                  {impactData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      case "risk":
+        return (
+          <div className="mt-4 space-y-4">
+            <h4 className="text-md font-medium mb-2">Risk Assessment Levels</h4>
+            {riskData.map((item, index) => (
+              <div key={index} className="space-y-2">
+                <div className="flex justify-between">
+                  <Label htmlFor={`risk-${index}`}>{item.category}</Label>
+                  <span className="text-sm font-medium">{item.level}%</span>
+                </div>
+                <Progress value={item.level} id={`risk-${index}`} className="h-2" />
+              </div>
+            ))}
+          </div>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -211,6 +356,34 @@ const ProjectInitializationModal = ({ projectName, isOpen, onOpenChange }: Proje
                             <Input placeholder="Enter your input here..." />
                           )}
                         </div>
+                        
+                        {section.hasVisualizations && (
+                          <div className="mt-4 border-t pt-4">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-md font-medium">Data Visualizations</h4>
+                              <div className="flex items-center space-x-2">
+                                <Select
+                                  value={selectedChart}
+                                  onValueChange={setSelectedChart}
+                                >
+                                  <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Select chart" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="budget">Budget</SelectItem>
+                                    <SelectItem value="timeline">Timeline</SelectItem>
+                                    <SelectItem value="impact">Impact</SelectItem>
+                                    <SelectItem value="risk">Risk Assessment</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <Button variant="outline" size="icon">
+                                  <PresentationChart size={20} />
+                                </Button>
+                              </div>
+                            </div>
+                            {renderDataVisualization()}
+                          </div>
+                        )}
                       </div>
                     ))}
                     
